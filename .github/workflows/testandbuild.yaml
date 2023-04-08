@@ -16,9 +16,7 @@ jobs:
           uses: actions/setup-node@v3
           with:
               node-version-file: './capstone_project/hello-world/.nvmrc'
-              cache: 'npm'
-              working-directory: ./capstone_project/hello-world
-        - run: npm test
+        - run: cd ./capstone_project/hello-world && npm test
     build:
           needs: [test]
           name: build docker image
