@@ -17,6 +17,7 @@ jobs:
           with:
               node-version-file: './capstone_project/hello-world/.nvmrc'
               cache: 'npm'
+              working-directory: ./capstone_project/hello-world
         - run: npm test
     build:
           needs: [test]
