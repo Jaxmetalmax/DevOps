@@ -1,0 +1,106 @@
+---
+- name: Ping target and create file in it
+  hosts: ansible_target1
+  vars_files:
+    - "./vars/vars.yaml"
+
+  tasks:
+  - name: Ping target
+    ansible.builtin.ping:
+    
+  - name: Create file
+    become: true
+    ansible.builtin.file:
+      path: /home/ansible_controller/hello.txt
+      state: touch
+      mode: u=rw,g=r,o=r
+
+- name: Install apache server
+  hosts: ansible_target2
+  vars_files:
+    - "./vars/vars.yaml"
+
+  tasks:
+    - name: update package list
+      become: true
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install apache
+      become: true
+      ansible.builtin.apt:
+        name: apache2
+        state: present
+
+    - name: Install tools with loop
+      become: true
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - jq
+        - vim
+        - python3
+
+    - name: Install tools loop with vars
+      become: true
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop: "{{ packages }}"
+
+- name: Install tools target1 group
+  hosts: tg1
+
+  tasks:
+
+    - name: Install JQ
+      become: true
+      ansible.builtin.apt:
+        name: "{{ package }}"
+        state: present
+        update_cache: yes
+
+- name: Install tools target2 group
+  hosts: tg2
+
+  tasks:
+
+    - name: Install python3 and vim
+      become: true
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop: 
+        - "{{ packages }}"
+
+- name: Install apache using roles on target1
+  hosts: tg1
+
+  roles:
+    - role: install_apache_apt
+
+  post_tasks:
+  - name: start apache server
+    become: true
+    ansible.builtin.command: service apache2 start
+
+- name: Install apache using roles on target2
+  hosts: tg2
+
+  roles:
+    - role: install_apache_apt
+
+  post_tasks:
+  - name: start apache server
+    become: true
+    ansible.builtin.command: service apache2 start
+
+#Post Task to start the apache service but it doesn't work on containers
+#  post_tasks:
+#    - name: start apache server
+#      become: true
+#      ansible.builtin.service:
+#        name: apache2
+#        state: started
